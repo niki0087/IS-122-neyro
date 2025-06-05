@@ -39,7 +39,6 @@ class LoginWindow(QMainWindow):
         btn_layout.addWidget(connect_btn)
         layout.addLayout(btn_layout)
         
-        # Кнопка выбора файла БД
         browse_btn = QPushButton("Обзор...")
         browse_btn.clicked.connect(self.browse_db_path)
         layout.addWidget(browse_btn)
@@ -60,7 +59,6 @@ class LoginWindow(QMainWindow):
             QMessageBox.critical(self, "Ошибка", "Укажите путь для создания БД")
             return
             
-        # Проверяем формат пути (не должен содержать :)
         if ':' in path:
             QMessageBox.critical(self, "Ошибка", 
                 "Для создания базы данных используйте локальный путь\n"
@@ -68,10 +66,8 @@ class LoginWindow(QMainWindow):
             return
             
         try:
-            # Создаем БД
             success = create_database(path, user, password)
             if success:
-                # Если создание успешно, подключаемся
                 self.conn = connect_database(path, user, password)
                 self.open_main_window()
             else:
@@ -204,7 +200,6 @@ class MainWindow(QMainWindow):
             camera_id = int(camera_id)
             workshop_number = int(workshop_text.split()[-1])
             
-            # Найти ID цеха по номеру
             workshops = get_all_workshops(self.conn)
             workshop_id = next(w[0] for w in workshops if w[1] == workshop_number)
             
@@ -242,7 +237,7 @@ class ReportsWindow(QDialog):
         self.setWindowTitle("Отчеты")
         self.setFixedSize(600, 400)
         self.conn = conn
-        self.reports = reports  # Сохраняем оригинальные данные отчетов
+        self.reports = reports
         
         layout = QVBoxLayout(self)
         self.list_widget = QListWidget()
@@ -252,7 +247,7 @@ class ReportsWindow(QDialog):
                          f"{report[2].strftime('%Y-%m-%d %H:%M:%S')}, "
                          f"{report[3]}")
             item = QListWidgetItem(item_text)
-            item.setData(Qt.UserRole, report[0])  # Сохраняем ID отчета
+            item.setData(Qt.UserRole, report[0])
             self.list_widget.addItem(item)
             
         self.list_widget.itemDoubleClicked.connect(self.generate_report)
@@ -261,7 +256,6 @@ class ReportsWindow(QDialog):
     def generate_report(self, item):
         report_id = item.data(Qt.UserRole)
         try:
-            # Находим полные данные отчета по ID
             report = next((r for r in self.reports if r[0] == report_id), None)
             if not report:
                 QMessageBox.critical(self, "Ошибка", "Данные отчета не найдены")
@@ -273,7 +267,6 @@ class ReportsWindow(QDialog):
                 QMessageBox.critical(self, "Ошибка", "Фото отчета не найдено")
                 return
                 
-            # Сохраняем временное изображение
             temp_img_path = f"temp_report_{report_id}.jpg"
             with open(temp_img_path, 'wb') as f:
                 f.write(photo_data)
@@ -296,22 +289,19 @@ class ReportsWindow(QDialog):
                 output_path=pdf_path
             )
             
-            # Открываем PDF
-            if sys.platform == 'win32':  # Windows
+            if sys.platform == 'win32':
                 os.startfile(pdf_path)
-            elif sys.platform == 'darwin':  # macOS
+            elif sys.platform == 'darwin':
                 os.system(f'open "{pdf_path}"')
-            else:  # Linux и другие UNIX-системы
+            else:
                 os.system(f'xdg-open "{pdf_path}"')
                 
-            # Удаляем временное изображение после использования
             os.remove(temp_img_path)
                 
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Ошибка генерации отчета: {str(e)}")
 
 def start_app():
-    # Для Linux: устанавливаем платформу xcb
     if sys.platform.startswith('linux'):
         os.environ['QT_QPA_PLATFORM'] = 'xcb'
     

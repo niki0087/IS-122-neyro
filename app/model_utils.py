@@ -1,4 +1,3 @@
-# model_utils.py
 import torch
 import cv2
 import numpy as np
@@ -34,13 +33,11 @@ def detect_gear_presence(model, image):
     std = np.array([0.229, 0.224, 0.225], dtype=np.float32)
     img_array = (img_array - mean) / std
     
-    # Преобразование в тензор
     img_tensor = torch.tensor(img_array, dtype=torch.float32).permute(2, 0, 1).unsqueeze(0)
     
     with torch.no_grad():
         outputs = model(img_tensor)
     
-    # Вероятность присутствия СИЗ
     helmet_present = outputs[0, 0].item() > 0.5
     uniform_present = outputs[0, 1].item() > 0.5
     
@@ -68,7 +65,6 @@ def get_violation_type(model, image):
     with torch.no_grad():
         outputs = model(img_tensor)
     
-    # Вероятность присутствия СИЗ
     helmet_present = outputs[0, 0].item() > 0.5
     uniform_present = outputs[0, 1].item() > 0.5
     
@@ -85,7 +81,7 @@ def get_violation_type(model, image):
 
 def parse_video_filename(filename):
     """Парсинг информации из имени видеофайла"""
-    # Паттерн для формата CAMERA1_08:07:19.06.04.2025.mp4
+    #CAMERA1_08:07:19.06.04.2025.mp4
     pattern = r'CAMERA(\d+)_(\d{2}:\d{2}:\d{2})\.(\d{2}\.\d{2}\.\d{4})'
     match = re.match(pattern, filename)
     
@@ -94,7 +90,6 @@ def parse_video_filename(filename):
         time_str = match.group(2)
         date_str = match.group(3)
         
-        # Форматируем дату из DD.MM.YYYY в YYYY-MM-DD
         day, month, year = date_str.split('.')
         formatted_date = f"{year}-{month}-{day}"
         

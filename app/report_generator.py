@@ -1,4 +1,3 @@
-# report_generator.py
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -9,18 +8,15 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import os
 
-# Путь к русскому шрифту (может быть изменен)
 RUSSIAN_FONT_PATH = '/usr/share/fonts/liberation/LiberationMono-Regular.ttf'
 RUSSIAN_FONT_BOLD_PATH = '/usr/share/fonts/liberation/LiberationMono-Bold.ttf'
 
 def register_russian_fonts():
     """Регистрация русских шрифтов для использования в отчетах"""
     try:
-        # Регистрируем обычный шрифт
         if os.path.exists(RUSSIAN_FONT_PATH):
             pdfmetrics.registerFont(TTFont('RussianFont', RUSSIAN_FONT_PATH))
         
-        # Регистрируем жирный шрифт
         if os.path.exists(RUSSIAN_FONT_BOLD_PATH):
             pdfmetrics.registerFont(TTFont('RussianFont-Bold', RUSSIAN_FONT_BOLD_PATH))
         return True
@@ -40,31 +36,26 @@ def generate_report_pdf(image_path, workshop_number, camera_id, violation_time, 
     violation_type - тип нарушения
     output_path - путь для сохранения PDF
     """
-    # Регистрируем русские шрифты
     russian_fonts_registered = register_russian_fonts()
     
-    # Определяем имена шрифтов
     font_normal = 'RussianFont' if russian_fonts_registered else 'Helvetica'
     font_bold = 'RussianFont-Bold' if russian_fonts_registered else 'Helvetica-Bold'
     
     c = canvas.Canvas(output_path, pagesize=A4)
     width, height = A4
     
-    # Создаем стили
     styles = getSampleStyleSheet()
     
-    # Стиль заголовка
     title_style = ParagraphStyle(
         'TitleStyle',
         parent=styles['Heading1'],
         fontName=font_bold,
         textColor=colors.red,
         fontSize=18,
-        alignment=1,  # центрирование
+        alignment=1,
         leading=20
     )
     
-    # Основной стиль текста
     body_style = ParagraphStyle(
         'BodyStyle',
         parent=styles['BodyText'],
@@ -79,10 +70,8 @@ def generate_report_pdf(image_path, workshop_number, camera_id, violation_time, 
     title.wrap(width - 100, 50)
     title.drawOn(c, 50, height - 70)
     
-    # Линия под заголовком
     c.line(50, height - 90, width - 50, height - 90)
     
-    # Информация о нарушении
     info_items = [
         f"Цех: {workshop_number}",
         f"Камера: {camera_id}",
@@ -97,7 +86,6 @@ def generate_report_pdf(image_path, workshop_number, camera_id, violation_time, 
         p.drawOn(c, 50, y_position)
         y_position -= 30
     
-    # Изображение с нарушением
     try:
         img = ImageReader(image_path)
         img_width, img_height = img.getSize()
@@ -110,7 +98,6 @@ def generate_report_pdf(image_path, workshop_number, camera_id, violation_time, 
         x_pos = (width - display_width) / 2
         y_pos = y_position - display_height - 20
         
-        # Убедимся, что изображение помещается на странице
         if y_pos < 50:
             display_height = y_position - 70
             display_width = display_height / aspect
@@ -126,11 +113,9 @@ def generate_report_pdf(image_path, workshop_number, camera_id, violation_time, 
         )
     except Exception as e:
         print(f"Ошибка при добавлении изображения: {str(e)}")
-        # Добавим текст вместо изображения, если что-то пошло не так
         c.setFont(font_normal, 12)
         c.drawString(50, y_position - 30, "Изображение недоступно")
     
-    # Подпись
     c.setFont(font_normal, 10)
     c.setFillColor(colors.grey)
     c.drawCentredString(width/2, 30, "Сгенерировано системой контроля СИЗ")

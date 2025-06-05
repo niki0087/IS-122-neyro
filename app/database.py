@@ -3,26 +3,21 @@ import os
 import logging
 from datetime import datetime
 
-# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def create_database(path, user, password):
     """Создание новой базы данных с необходимыми таблицами"""
     try:
-        # Преобразуем путь в абсолютный
         path = os.path.abspath(path)
         logger.info(f"Создание БД: {path}")
         
-        # Создаем директорию, если ее нет
         os.makedirs(os.path.dirname(path), exist_ok=True)
         
-        # Удаляем существующий файл, если есть
         if os.path.exists(path):
             logger.warning(f"Файл БД {path} уже существует, удаляем...")
             os.remove(path)
         
-        # Создание БД - единый формат строки подключения
         connection_string = f"localhost/3050:{path}"
         con = fdb.create_database(
             connection_string,
@@ -30,10 +25,8 @@ def create_database(path, user, password):
             password=password
         )
         
-        # Выполнение DDL
         cur = con.cursor()
         
-        # Таблица Цеха
         cur.execute("""
             CREATE TABLE WORKSHOPS (
                 WORKSHOP_ID INTEGER PRIMARY KEY,
@@ -41,7 +34,6 @@ def create_database(path, user, password):
             )
         """)
         
-        # Таблица Камеры
         cur.execute("""
             CREATE TABLE CAMERAS (
                 CAMERA_ID INTEGER PRIMARY KEY,
@@ -49,7 +41,6 @@ def create_database(path, user, password):
             )
         """)
         
-        # Таблица Отчеты
         cur.execute("""
             CREATE TABLE REPORTS (
                 REPORT_ID INTEGER PRIMARY KEY,
@@ -60,12 +51,10 @@ def create_database(path, user, password):
             )
         """)
         
-        # Генераторы для первичных ключей
         cur.execute("CREATE SEQUENCE GEN_WORKSHOP_ID")
         cur.execute("CREATE SEQUENCE GEN_CAMERA_ID")
         cur.execute("CREATE SEQUENCE GEN_REPORT_ID")
         
-        # Триггеры для автоинкремента
         cur.execute("""
             CREATE TRIGGER WORKSHOPS_BI FOR WORKSHOPS
             ACTIVE BEFORE INSERT POSITION 0
@@ -112,7 +101,6 @@ def connect_database(path, user, password):
     
     logger.info(f"Подключение к БД: {path}")
     try:
-        # Используем тот же формат, что и при создании
         connection_string = f"localhost/3050:{path}"
         return fdb.connect(
             connection_string,
@@ -201,7 +189,6 @@ def get_report_photo(conn, report_id):
     cur.execute("SELECT PHOTO FROM REPORTS WHERE REPORT_ID = ?", (report_id,))
     result = cur.fetchone()
     if result:
-        # Читаем данные из BlobReader и преобразуем в байты
         blob_reader = result[0]
         photo_data = blob_reader.read()
         blob_reader.close()
